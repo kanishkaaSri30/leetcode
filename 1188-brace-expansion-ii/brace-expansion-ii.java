@@ -1,98 +1,59 @@
-import java.util.*;
-
 class Solution {
-
     public List<String> braceExpansionII(String expression) {
-        Set<String> result = dfs(expression, 0, expression.length() - 1);
-        return new ArrayList<>(result);
+        HashSet<String>set = helper(expression, 0, expression.length());
+        List<String>ans = new ArrayList<>(set);
+        Collections.sort(ans);
+        return ans;
     }
 
-    private Set<String> dfs(String s, int l, int r) {
+    public HashSet<String> helper(String exp, int st, int end){
+        HashSet<String>result = new HashSet<>();
+        HashSet<String>curr = new HashSet<>();
+        curr.add("");
+        int i = st;
+        while(i<end){
+            char ch = exp.charAt(i);
 
-        Set<String> result = new TreeSet<>();
-        int balance = 0;
+            if(ch=='{'){
+                int braces=1;
+                int j = i+1;
+                while(j<end && braces!=0){
+                    if(exp.charAt(j)=='{'){
+                        braces++;
+                    }
+                    else if(exp.charAt(j)=='}'){
+                        braces--;
+                    }
+                    j++;
+                }
+                HashSet<String>tem = helper(exp, i+1, j-1);
+                HashSet<String>tem2 = new HashSet<>();
+                for(String m : curr){
+                    for(String n : tem){
+                        tem2.add(m+n);
+                    }
+                }
+                curr = tem2;
+                i=j;
 
-        // Check for top-level comma
-        for (int i = l; i <= r; i++) {
-
-            if (s.charAt(i) == '{') {
-                balance++;
-            } 
-            else if (s.charAt(i) == '}') {
-                balance--;
-            } 
-            else if (s.charAt(i) == ',' && balance == 0) {
-
-                result.addAll(dfs(s, l, i - 1));
-                result.addAll(dfs(s, i + 1, r));
-
-                return result;
             }
-        }
-
-        // If entire expression is inside braces
-        if (s.charAt(l) == '{' && matchingBrace(s, l) == r) {
-            return dfs(s, l + 1, r - 1);
-        }
-
-        // Concatenation
-        result.add("");
-
-        int i = l;
-
-        while (i <= r) {
-
-            Set<String> part;
-
-            if (s.charAt(i) == '{') {
-
-                int j = matchingBrace(s, i);
-
-                part = dfs(s, i + 1, j - 1);
-
-                i = j + 1;
-
-            } else {
-
-                part = new TreeSet<>();
-                part.add(String.valueOf(s.charAt(i)));
-
+            else if(ch==','){
+                result.addAll(curr);
+                curr = new HashSet<>();
+                curr.add("");
                 i++;
             }
-
-            // Combine current results with this part
-            Set<String> newResult = new TreeSet<>();
-
-            for (String a : result) {
-                for (String b : part) {
-                    newResult.add(a + b);
+            else{
+                HashSet<String>temp = new HashSet<>();
+                for(String k : curr){
+                    temp.add(k+ch);
                 }
+                curr = temp;
+                i++;
             }
-
-            result = newResult;
         }
 
+        result.addAll(curr);
         return result;
-    }
-
-    private int matchingBrace(String s, int start) {
-
-        int balance = 0;
-
-        for (int i = start; i < s.length(); i++) {
-
-            if (s.charAt(i) == '{') {
-                balance++;
-            } 
-            else if (s.charAt(i) == '}') {
-                balance--;
-
-                if (balance == 0) {
-                    return i;
-                }
-            }
-        }
-
-        return -1;
     }
 }
