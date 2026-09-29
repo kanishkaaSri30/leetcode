@@ -1,58 +1,55 @@
+import java.math.BigInteger;
 class Solution {
-
-    private boolean[][][] visited;
-
     public boolean hasValidPath(char[][] grid) {
-        int m = grid.length, n = grid[0].length;
+        int m = grid.length;
+        int n = grid[0].length;
+        int lim = (m + n) >> 1;
 
-        // Basic impossible cases
-        if ((m + n - 1) % 2 != 0 ||
+        if (((m + n) & 1) == 0 ||
             grid[0][0] == ')' ||
-            grid[m - 1][n - 1] == '(') {
+            grid[m - 1][n - 1] == '(')
             return false;
+
+        BigInteger maxMask = BigInteger.ONE.shiftLeft(lim + 1)
+                                          .subtract(BigInteger.ONE);
+
+        BigInteger[] dp = new BigInteger[n];
+
+        for (int i = 0; i < n; i++)
+            dp[i] = BigInteger.ZERO;
+
+        dp[0] = BigInteger.ONE.shiftLeft(1);
+
+        int p = 1;
+
+        for (int j = 1; j < n; j++) {
+            p += grid[0][j] == '(' ? 1 : -1;
+
+            if (p < 0 || p > lim) break;
+
+            dp[j] = BigInteger.ONE.shiftLeft(p);
         }
 
-        int maxBal = (m + n) / 2;
+        p = 1;
 
-        visited = new boolean[m][n][maxBal + 1];
+        for (int i = 1; i < m; i++) {
+            p += grid[i][0] == '(' ? 1 : -1;
 
-        return dfs(grid, 0, 0, 0, m, n, maxBal);
-    }
+            if (dp[0].equals(BigInteger.ZERO) || p < 0 || p > lim)
+                dp[0] = BigInteger.ZERO;
+            else
+                dp[0] = BigInteger.ONE.shiftLeft(p);
 
-    private boolean dfs(char[][] grid, int r, int c,
-                        int bal, int m, int n, int maxBal) {
+            for (int j = 1; j < n; j++) {
+                dp[j] = dp[j - 1].or(dp[j]);
 
-        bal += (grid[r][c] == '(' ? 1 : -1);
-
-        // Invalid balance
-        if (bal < 0 || bal > maxBal) {
-            return false;
+                if (grid[i][j] == '(')
+                    dp[j] = dp[j].shiftLeft(1).and(maxMask);
+                else
+                    dp[j] = dp[j].shiftRight(1);
+            }
         }
 
-        // Reached destination
-        if (r == m - 1 && c == n - 1) {
-            return bal == 0;
-        }
-
-        // Already explored this state
-        if (visited[r][c][bal]) {
-            return false;
-        }
-
-        visited[r][c][bal] = true;
-
-        // Move down
-        if (r + 1 < m &&
-            dfs(grid, r + 1, c, bal, m, n, maxBal)) {
-            return true;
-        }
-
-        // Move right
-        if (c + 1 < n &&
-            dfs(grid, r, c + 1, bal, m, n, maxBal)) {
-            return true;
-        }
-
-        return false;
+        return dp[n - 1].testBit(0);
     }
 }
