@@ -1,34 +1,23 @@
 class Solution {
+
     public boolean checkValidString(String s) {
-        int minOpen = 0;
-        int maxOpen = 0;
+        int l = 0, h = 0;
 
         for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
 
-            if (c == '(') {
-                minOpen++;
-                maxOpen++;
-            } else if (c == ')') {
-                minOpen--;
-                maxOpen--;
-            } else { // c == '*'
-                minOpen--; // If treated as ')'
-                maxOpen++; // If treated as '('
-            }
+            // Minimum possible balance
+            l += s.charAt(i) == '(' ? 1 : -1;
 
-            // More ')' than possible '(' and '*' combined
-            if (maxOpen < 0) {
-                return false;
-            }
+            // Maximum possible balance
+            h += s.charAt(i) == ')' ? -1 : 1;
 
-            // minOpen cannot be negative; we can choose to treat '*' as "" instead of ')'
-            if (minOpen < 0) {
-                minOpen = 0;
-            }
+            // Even the maximum balance is invalid
+            if (h < 0) return false;
+
+            // Minimum balance cannot be negative
+            l = Math.max(l, 0);
         }
 
-        // Valid if we can reach exactly 0 open left parentheses
-        return minOpen == 0;
+        return l == 0;
     }
 }
